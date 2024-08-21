@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+
+  react-vite-app:
+    image: smart-home-frontend
+    container_name: smart_home_frontend
+    ports:
+      - "8081:80"  # Map container's port 80 to host's port 8080
+
+    depends_on:
+      - mongodb  # This ensures MongoDB starts before the React app
+      - fastapi-app
+
+    networks:
+      - app-network
+
+
+  fastapi-app:
+    image: smart-home-backend
+    container_name: smart_home_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE}
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  mongodb_data:
