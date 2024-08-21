@@ -6,7 +6,7 @@ services:
     container_name: mongodb
     restart: always
     env_file:
-      - .env
+      - ./smart-home/.env
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
@@ -19,7 +19,9 @@ services:
       - app-network
 
   react-vite-app:
-    image: smart-home-frontend
+    build:
+      context: ./smart-home-ui
+      dockerfile: Dockerfile
     container_name: smart_home_frontend
     ports:
       - "8081:80"  # Map container's port 80 to host's port 8080
@@ -33,14 +35,16 @@ services:
 
 
   fastapi-app:
-    image: smart-home-backend
+    build:
+      context: ./smart-home
+      dockerfile: Dockerfile
     container_name: smart_home_backend
     ports:
       - "8000:8000"
     depends_on:
       - mongodb
     env_file:
-      - .env
+      - ./smart-home/.env
     environment:
       MONGO_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE}
     networks:
